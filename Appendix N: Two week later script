@@ -1,0 +1,41 @@
+function sendFollowUpEmails() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues(); // Get all data from the sheet
+  var today = new Date();
+
+  var emailColumn = 3; // Column with email addresses (adjust if necessary)
+  var dateColumn = 1; // Column with "Date Added"
+  var followUpColumn = 68; // Column with "Follow-Up Sent" status, Column BP
+  var formLink = "https://forms.gle/RL6cKaCch66hghq99"; // Replace with your new form link
+
+  for (var i = 1; i < data.length; i++) {
+    var email = data[i][emailColumn - 1];
+    var dateAdded = data[i][dateColumn - 1];
+    var followUpSent = data[i][followUpColumn - 1];
+
+    if (email && dateAdded && !followUpSent) {
+      var timeDifference = (today - new Date(dateAdded)) / (1000 * 60 * 60 * 24); // Calculate days since submission
+
+      if (timeDifference >= 14) {
+        // Send follow-up email
+        GmailApp.sendEmail(
+          email,
+          "Follow-Up Survey",
+          `Previously you have participated in a narrative survey. You have been randomly selected to do a follow-up. We would like to do a small 10 minute follow-up. Here is the link to your follow-up survey: ${formLink}`
+        );
+
+        // Mark as sent
+        sheet.getRange(i + 1, followUpColumn).setValue("Sent");
+      }
+    }
+  }
+}
+
+function setDailyTrigger() {
+  // Create a trigger to run the script daily
+  ScriptApp.newTrigger("sendFollowUpEmails")
+    .timeBased()
+    .everyDays(1)
+    .create();
+}
+
