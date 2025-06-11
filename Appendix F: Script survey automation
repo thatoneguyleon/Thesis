@@ -1,0 +1,33 @@
+function sendRandomSurvey(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet();
+  var responseSheet = sheet.getSheets()[0]; // Assumes the first sheet stores responses
+  var surveyLinks = sheet.getSheetByName("Survey Links"); // Tab with survey links
+
+  var emailColumn = 2; // Column with email addresses (adjust if necessary)
+  var sentColumn = 4; // Column to track if a survey has been sent
+  var links = surveyLinks.getRange("A1:A3").getValues().flat(); // Survey links array
+ 
+  var lastRow = responseSheet.getLastRow();
+  var email = responseSheet.getRange(lastRow, emailColumn).getValue();
+  var surveySent = responseSheet.getRange(lastRow, sentColumn).getValue();
+
+  if (!surveySent) {
+    // Choose a random link
+    var randomLink = links[Math.floor(Math.random() * links.length)];
+    // Send email
+    GmailApp.sendEmail(
+      email,
+      "Your Survey Invitation",
+      `Thank you for participating! Please complete the survey here: ${randomLink}`
+    );
+    // Mark as sent
+    responseSheet.getRange(lastRow, sentColumn).setValue("Sent");
+  }
+}
+function setTrigger() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet();
+  ScriptApp.newTrigger("sendRandomSurvey")
+    .forSpreadsheet(sheet)
+    .onFormSubmit()
+    .create();
+}
